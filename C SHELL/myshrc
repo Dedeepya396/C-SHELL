@@ -1,0 +1,15 @@
+alias reveall = reveal -l
+alias home = hop ~
+alias reveala =  reveal -a
+alias getInfo = log
+
+func hop_seek()
+{
+	hop "$1"
+	seek "$1" 
+}
+func mk_hop()
+{
+	mkdir "$1"
+	hop "$1" 
+}
