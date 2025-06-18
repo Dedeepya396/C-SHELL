@@ -46,10 +46,11 @@ void reveal_permissions(char *directory, int a_flag)
     // Process sorted entries
     for (i = 0; i < count; i++)
     {
-        if (a_flag == 0 && entries[i]->d_name[0] == '.')
+        if (a_flag == 0 && entries[i]->d_name[0] == '.') // if there is no a flag hide hidden files
             continue;
 
         char filepath[1024];
+        // construct file path by concatenating directory and file name
         snprintf(filepath, sizeof(filepath), "%s/%s", directory, entries[i]->d_name);
         struct stat fileStat;
 
@@ -73,20 +74,20 @@ void reveal_permissions(char *directory, int a_flag)
         strftime(timebuf, sizeof(timebuf), "%b %d %H:%M", localtime(&fileStat.st_mtime));
         printf("\t%s\t", timebuf);
 
-        if (S_ISDIR(fileStat.st_mode))
+        // set the color by the type of file
+        if (S_ISDIR(fileStat.st_mode)) // is directory
         {
             printf("\033[0;34m");
         }
-        else if (S_ISREG(fileStat.st_mode) && (fileStat.st_mode & S_IXUSR))
+        else if (S_ISREG(fileStat.st_mode) && (fileStat.st_mode & S_IXUSR)) // is an executable
         {
             printf("\033[0;32m");
         }
-        else if (S_ISREG(fileStat.st_mode))
+        else if (S_ISREG(fileStat.st_mode)) // is a normal file
         {
             printf("\033[0;37m");
         }
-
-        printf("%s\n", entries[i]->d_name);
+        printf("%s\n", entries[i]->d_name); // print file name/directory name
         printf("\033[0m");
     }
 
@@ -94,7 +95,7 @@ void reveal_permissions(char *directory, int a_flag)
     free(entries);
     closedir(dir);
 }
-
+// prints only the file/directory names contained in the given path
 void reveal_(char *directory, int a_flag)
 {
     struct dirent **entries;
@@ -128,11 +129,11 @@ void reveal_(char *directory, int a_flag)
 
     for (i = 0; i < count; i++)
     {
-        if (a_flag == 0 && entries[i]->d_name[0] == '.')
+        if (a_flag == 0 && entries[i]->d_name[0] == '.') // skip hidden files
             continue;
 
         char filepath[1024];
-        snprintf(filepath, sizeof(filepath), "%s/%s", directory, entries[i]->d_name);
+        snprintf(filepath, sizeof(filepath), "%s/%s", directory, entries[i]->d_name); // construct file path
         struct stat fileStat;
 
         if (stat(filepath, &fileStat) < 0)
@@ -140,16 +141,16 @@ void reveal_(char *directory, int a_flag)
             perror("\033[0;31m stat \033[0");
             continue;
         }
-
-        if (S_ISDIR(fileStat.st_mode))
+        // set color acc to type of file
+        if (S_ISDIR(fileStat.st_mode)) // is directory
         {
             printf("\033[0;34m");
         }
-        else if (S_ISREG(fileStat.st_mode) && (fileStat.st_mode & S_IXUSR))
+        else if (S_ISREG(fileStat.st_mode) && (fileStat.st_mode & S_IXUSR)) // is an executable file
         {
             printf("\033[0;32m");
         }
-        else if (S_ISREG(fileStat.st_mode))
+        else if (S_ISREG(fileStat.st_mode)) // is a file
         {
             printf("\033[0;37m");
         }
@@ -190,58 +191,55 @@ void reveal_fun(char *cmd, char *home_dir)
             token = strtok(NULL, " \t");
             continue;
         }
-        if (strstr(token, "-"))
+        if (strstr(token, "-")) // if the token contains information about flag
         {
             for (int i = 0; i < strlen(token); i++)
             {
-                if (token[i] == 'a')
+                if (token[i] == 'a') // if it is a flag
                     a_flag = 1;
-                if (token[i] == 'l')
+                if (token[i] == 'l') // if it is l flag
                     l_flag = 1;
             }
         }
         else
         {
-            strcat(directory, token);
+            strcat(directory, token); // copy the directory which we want to reveal
         }
         token = strtok(NULL, " \t");
     }
     directory[strlen(directory)] = '\0';
-    char *absolute_path = (char *)malloc(sizeof(char) * buf_size);
+    char *absolute_path = (char *)malloc(sizeof(char) * buf_size); // construct absolute path
     int flag = 0;
-    if (directory[0] == '~')
+    if (directory[0] == '~') // relative path from home dir
     {
-        char temp[buf_size];
-        strcpy(temp, directory);
-        strcpy(directory, temp + 1);
+        strcpy(directory, directory + 1);
         strcpy(absolute_path, home_dir);
         strcat(absolute_path, directory);
         flag = 1;
     }
-    printf("dir: %s\n", directory);
 
-    if (strcmp(directory, "~") == 0)
+    if (strcmp(directory, "~") == 0) // if the directory contains only ~
     {
         strcpy(absolute_path, home_dir);
     }
-    else if (strcmp(directory, ".") == 0)
+    else if (strcmp(directory, ".") == 0) // if the directory contains .
     {
         strcpy(absolute_path, ".");
     }
-    else if (strcmp(directory, "..") == 0)
+    else if (strcmp(directory, "..") == 0) // if the directory contains ..
     {
         char *dir = (char *)malloc(sizeof(char) * buf_size);
         getcwd(dir, buf_size);
-        if (strcmp(home_dir, dir) == 0)
+        if (strcmp(home_dir, dir) == 0) // if we are in home directory we cant reveal over parent directories
             strcpy(absolute_path, ".");
         else
-            strcpy(absolute_path, "..");
+            strcpy(absolute_path, ".."); // else we will reveal over previous directory (parent directory)
     }
     else
     {
-        if(flag==0)
+        if (flag == 0)
         {
-            if (strncmp(directory, home_dir, strlen(home_dir)-1) != 0)
+            if (strncmp(directory, home_dir, strlen(home_dir) - 1) != 0)
             {
                 char new_dir[buf_size];
                 char *dir = (char *)malloc(sizeof(char) * buf_size);
@@ -258,14 +256,14 @@ void reveal_fun(char *cmd, char *home_dir)
             }
         }
     }
-    printf("abs: %s\n", absolute_path);
-    if (l_flag)
+    printf("abs path: %s\n", absolute_path);
+    if (l_flag) // if l flag is present
     {
-        reveal_permissions(absolute_path, a_flag);
+        reveal_permissions(absolute_path, a_flag); // prints the files/ directories in the given path with details
     }
     else
     {
-        reveal_(absolute_path, a_flag);
+        reveal_(absolute_path, a_flag); // prints the fails/directories in the given path
     }
     free(token);
     free(directory);

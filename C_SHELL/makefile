@@ -1,2 +1,2 @@
-a.out : main_b.c inputReq.c log.c hop.c systemCommands.c proclore.c dispReq.c reveal.c seek.c redirection.c pipes.c pipes_redirection.c activities.c FG_BG.c nocolors.c signals.c neonate.c networking.c nano.c
-	gcc -o a.out main_b.c inputReq.c log.c hop.c systemCommands.c proclore.c dispReq.c reveal.c seek.c redirection.c pipes.c pipes_redirection.c activities.c FG_BG.c nocolors.c signals.c neonate.c networking.c nano.c -I.
+a.out : main.c inputReq.c log.c hop.c systemCommands.c proclore.c dispReq.c reveal.c seek.c redirection.c pipes.c pipes_redirection.c activities.c FG_BG.c nocolors.c signals.c neonate.c networking.c nano.c
+	gcc -o a.out main.c inputReq.c log.c hop.c systemCommands.c proclore.c dispReq.c reveal.c seek.c redirection.c pipes.c pipes_redirection.c activities.c FG_BG.c nocolors.c signals.c neonate.c networking.c nano.c -I.

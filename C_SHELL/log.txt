@@ -1,10 +1,11 @@
-reveal
+hop ./HeaderFiles
+hop ~/HeaderFiles
+hop ~/HeaderFiles
+hop ./HeaderFiles
+hop ./HeaderFiles
+hop HeaderFiles
+reveal -l /HeaderFiles
+reveal - l /HeaderFiles
+reveal -l /HeaderFiles
+reveal -l HomeHuhh
 
-neonate -n 1
-
-neonate -n 1
-
-neonate -n 1
-
-neonate -n 1
-mk_hop will

@@ -2,11 +2,11 @@
 
 void proclore()
 {
-    pid_t processID = getpid();
+    pid_t processID = getpid(); // get the pid of process
     char proc_path[buf_size];
     FILE *status_file;
     char processStatus;
-
+    // construct process path
     snprintf(proc_path, sizeof(proc_path), "/proc/%d/stat", processID);
     status_file = fopen(proc_path, "r");
     if (status_file == NULL)
@@ -17,7 +17,7 @@ void proclore()
     fscanf(status_file, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*d %lu", &virtual_memory);
     fclose(status_file);
 
-    int processGroupID = getpgid(processID);
+    int processGroupID = getpgid(processID); // get group id of the process
 
     char exe_path[256], exe_realpath[256];
     sprintf(exe_path, "/proc/%d/exe", processID);

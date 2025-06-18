@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include "dispReq.h"
 #include "hop.h"
-// #include "reveal.h"
-// #include "seek.h"
 #include "proclore.h"
 #include "log.h"
 #include "systemCommands.h"
@@ -15,7 +13,7 @@
 #include "neonate.h"
 int processUserCommands(char *input)
 {
-    if (strstr(input, "hop") || strstr(input, "log") || strstr(input, "proclore") || strstr(input, "reveal") || strstr(input, "seek") || strncmp(input, "fg", 2) == 0 || strncmp(input, "bg", 2) == 0||strncmp(input,"iMan",4)==0||strncmp(input,"neonate -n",10)==0)
+    if (strstr(input, "hop") || strstr(input, "log") || strstr(input, "proclore") || strstr(input, "reveal") || strstr(input, "seek") || strncmp(input, "fg", 2) == 0 || strncmp(input, "bg", 2) == 0 || strncmp(input, "iMan", 4) == 0 || strncmp(input, "neonate -n", 10) == 0)
         return 1;
     else
         return 0;
@@ -43,25 +41,24 @@ void processRedirection(char *input, char *home_dir, char *previous_dir, char *l
     trimWhitespaces(input);
     char *command = (char *)malloc(sizeof(char) * buf_size);
     strcpy(command, input);
-    int copy_in = dup(0);
+    int copy_in = dup(0); // duplicate file descriptors of stdin, stdout
     int copy_out = dup(1);
 
     int fd_in = -1, fd_out = -1;
 
-    if (strstr(command, ">>") != NULL)
+    if (strstr(command, ">>") != NULL) // contains output redirection but append
     {
-        char *filename_part = strstr(command, ">>");
-        filename_part[0] = '\0';
-        filename_part += 2;
+        char *filename_part = strstr(command, ">>"); // collect the file name after >>
+        filename_part += 2;                          // remove >>
         trimWhitespaces(filename_part);
-        char *filename = strtok(filename_part, " ;");
-        fd_out = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        char *filename = strtok(filename_part, " ;");                 // if contains ;
+        fd_out = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644); // open the file in append mode
         if (fd_out < 0)
         {
             perror("File opening failed");
             return;
         }
-        if (dup2(fd_out, STDOUT_FILENO) == -1)
+        if (dup2(fd_out, STDOUT_FILENO) == -1) // point the stdout to file descriptor of filename
         {
             perror("dup2 failed for stdout");
             return;
@@ -71,17 +68,16 @@ void processRedirection(char *input, char *home_dir, char *previous_dir, char *l
     else if (strstr(command, ">") != NULL)
     {
         char *filename_part = strstr(command, ">");
-        filename_part[0] = '\0';
         filename_part += 1;
         trimWhitespaces(filename_part);
         char *filename = strtok(filename_part, " ;");
-        fd_out = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        fd_out = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644); // open in truncate mode
         if (fd_out < 0)
         {
             perror("File opening failed");
             return;
         }
-        if (dup2(fd_out, STDOUT_FILENO) == -1)
+        if (dup2(fd_out, STDOUT_FILENO) == -1) // point the stdout to file descriptor of given file
         {
             perror("dup2 failed for stdout");
             return;
@@ -92,29 +88,30 @@ void processRedirection(char *input, char *home_dir, char *previous_dir, char *l
     if (strstr(command, "<") != NULL)
     {
         char *filename_part = strstr(command, "<");
-        filename_part[0] = '\0';
+        // filename_part[0] = '\0';
         filename_part += 1;
         trimWhitespaces(filename_part);
         char *filename = strtok(filename_part, " ;");
-        fd_in = open(filename, O_RDONLY);
+        fd_in = open(filename, O_RDONLY); // open the file in read mode
         if (fd_in < 0)
         {
             perror("Input file opening failed");
             return;
         }
-        if (dup2(fd_in, STDIN_FILENO) == -1)
+        if (dup2(fd_in, STDIN_FILENO) == -1) // point the stdin to fd of given file
         {
             perror("dup2 failed for stdin");
             return;
         }
     }
-
+    // above we have changed the file descriptor only -> havent executed the command
     // Process commands
-    if (processUserCommands(command))
+    if (processUserCommands(command)) // commands are user commands -> hop,log,seek,reveal,etc
     {
+        // compare the command and execute that command
         if (strncmp(command, "hop", 3) == 0)
         {
-            hop_fun(command, home_dir, previous_dir);
+            hop(command, home_dir, previous_dir);
         }
         else if (strncmp(command, "log", 3) == 0)
         {
@@ -155,6 +152,7 @@ void processRedirection(char *input, char *home_dir, char *previous_dir, char *l
     }
     else
     {
+        // if they are not user commands -> execute based on whether they are bg/fg
         if (fgbg == 0)
         {
             background_process(command);

@@ -18,7 +18,7 @@ char get_process_state(int pid)
     fclose(status_file);
     return processStatus;
 }
-void appendProcessList(char *input, int pid, int fgbg)
+void appendProcessList(char *input, int pid, int fgbg) // add the process to the list
 {
     activities[top].pid = pid;
     activities[top].fg_bg = fgbg;

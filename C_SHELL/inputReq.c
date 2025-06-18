@@ -14,6 +14,7 @@
 #include "networking.h"
 #include "shrc.h"
 #include "neonate.h"
+// detects commands containing redirection/piping
 int processCommands(char *input)
 {
     if (strstr(input, ">") || strstr(input, ">>") || strstr(input, "<") || strstr(input, "|"))
@@ -21,7 +22,7 @@ int processCommands(char *input)
     else
         return 0;
 }
-
+// if command is "proclore id", returns if id exists or -1 otherwise
 int getProcloreID(char *command)
 {
     char *token1 = (char *)malloc(sizeof(char) * buf_size);
@@ -40,6 +41,7 @@ int getProcloreID(char *command)
     free(token1);
     return num;
 }
+
 int checkForAliases(char *input, char **modifiedInput)
 {
     for (int i = 0; i < alias_top; i++)
@@ -53,7 +55,10 @@ int checkForAliases(char *input, char **modifiedInput)
     (*modifiedInput) = "NOTFOUND";
     return 0;
 }
-
+// handles multiple commands separated by ; or &
+// tokenizes them by space, concatenates until we encounter a & or ;
+// according to that we execute that command in foreground or background
+// function which processes commands and redirects them to appropriate functions
 void dividingCommands(char *input, char *home_dir, char *filename, char *previous_directory)
 {
     input[strcspn(input, "\n")] = 0;
@@ -66,9 +71,9 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
         if (strcmp(token, "&") == 0)
         {
             trimWhitespaces(command);
-            if (processCommands(command))
+            if (processCommands(command)) // command should be ran in background and redirection/piping is required
             {
-                if (strstr(command, "|") != NULL)
+                if (strstr(command, "|") != NULL) // contains piping
                 {
                     int remove_len = strlen(before_and) + 2;
                     int n = strlen(command) - remove_len;
@@ -77,11 +82,11 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
                     trimWhitespaces(temp);
                     strcpy(command, temp);
                 }
-                if ((strstr(command, ">") || strstr(command, "<")) && strstr(command, "|") == NULL)
+                if ((strstr(command, ">") || strstr(command, "<")) && strstr(command, "|") == NULL) // contains only redirection
                 {
                     processRedirection(command, home_dir, previous_directory, filename, 1);
                 }
-
+                // contains only piping
                 if ((strstr(command, "<") == NULL && strstr(command, ">") == NULL) && strstr(command, "|") != NULL)
                 {
                     processPipes(command, home_dir);
@@ -97,7 +102,7 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
                 background_process(command);
             strcpy(command, "");
         }
-        else if (strcmp(token, ";") == 0)
+        else if (strcmp(token, ";") == 0) // if all the processes are to be run in foreground
         {
             trimWhitespaces(command);
             if (processCommands(command))
@@ -107,20 +112,20 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
                     both(command, home_dir, previous_directory, filename, 1);
                 }
             }
-            else
+            else // command doesnt have redirection/piping
             {
                 char *alias = (char *)malloc(sizeof(char) * buf_size);
                 strcpy(alias, "");
-                checkForAliases(command, &alias);
+                checkForAliases(command, &alias); // checks for alias functions
                 if (strcmp((alias), "NOTFOUND") != 0)
                 {
-                    strcpy(command, "");
+                    strcpy(command, ""); // if an alias is found replace the command with actual command of that alias
                     strcpy(command, (alias));
-                    command[strcspn(command, "\n")] = '\0';
+                    command[strcspn(command, "\n")] = '\0'; // remove new line in case
                 }
                 if (strncmp(command, "hop", 3) == 0)
                 {
-                    hop_fun(command, home_dir, previous_directory);
+                    hop(command, home_dir, previous_directory);
                 }
                 else if (strncmp(command, "seek", 4) == 0)
                 {
@@ -132,15 +137,12 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
                 }
                 else if (strncmp(command, "proclore", 8) == 0)
                 {
+                    // command is "proclore" or "proclore id"
                     int ID = getProcloreID(command);
                     if (ID != -1)
-                    {
                         procloreID(ID);
-                    }
                     else
-                    {
                         proclore();
-                    }
                 }
                 else if (strncmp(command, "reveal", 6) == 0)
                 {
@@ -169,6 +171,7 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
         }
         else
         {
+            // build up the command until we encounter a ; or &
             strcat(command, token);
             strcat(command, " ");
         }
@@ -183,11 +186,12 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
         }
         token = strtok_r(NULL, " \t", &saveptr);
     }
-
+    // if we didnt have a ; or & after a command
+    // the comparisions will be same as previous ones but we dont compare for ; or &
+    // as we are sure that they dont exist in this command
     if (strcmp(command, "") != 0)
     {
         trimWhitespaces(command);
-
         char *alias = (char *)malloc(sizeof(char) * buf_size);
         strcpy(alias, "");
         checkForAliases(command, &alias);
@@ -209,7 +213,7 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
         {
             if (strncmp(command, "hop", 3) == 0)
             {
-                hop_fun(command, home_dir, previous_directory);
+                hop(command, home_dir, previous_directory);
             }
             else if (strncmp(command, "seek", 4) == 0)
             {
@@ -217,20 +221,15 @@ void dividingCommands(char *input, char *home_dir, char *filename, char *previou
             }
             else if (strncmp(command, "log", 3) == 0)
             {
-
                 log_fun(filename, command, home_dir, previous_directory);
             }
             else if (strncmp(command, "proclore", 8) == 0)
             {
                 int ID = getProcloreID(command);
                 if (ID != -1)
-                {
                     procloreID(ID);
-                }
                 else
-                {
                     proclore();
-                }
             }
             else if (strncmp(command, "reveal", 6) == 0)
             {

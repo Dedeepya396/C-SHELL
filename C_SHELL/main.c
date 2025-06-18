@@ -133,38 +133,36 @@ int main()
     getcwd(home_dir, buf_size);
     char *previous_directory = (char *)malloc(sizeof(char) * buf_size);
     strcpy(previous_directory, home_dir);
-    char filename[] = "/log.txt";
-    char *actual_filename = (char *)malloc(sizeof(char) * buf_size);
-    strcpy(actual_filename, home_dir);
-    strcat(actual_filename, filename);
+    char *logFileName = (char *)malloc(sizeof(char) * buf_size);
+    strcpy(logFileName, home_dir);
+    strcat(logFileName, "/log.txt");
     while (1)
     {
         print_The_Directory(home_dir);
-        if (fgets(input, buf_size1, stdin) == NULL)
+        if (fgets(input, buf_size1, stdin) == NULL) // if there is an error in reading input terminate
         {
             cleanupAndExit();
         }
-        trimWhitespaces(input);
-        input[strcspn(input, "\n")] = '\0';
-        if (strcmp(input, "bye") == 0)
+        trimWhitespaces(input);             // remove whitespaces to get clean command
+        input[strcspn(input, "\n")] = '\0'; // replace the new line character by null character
+        if (strcmp(input, "bye") == 0)      // to exit from this duplicate C shell
         {
             break;
         }
         if (strcmp(input, "\n") != 0)
-            log_Write(input, actual_filename);
-        if (strcmp(input, "activities") == 0)
+            log_Write(input, logFileName);
+        if (strcmp(input, "activities") == 0) // a command that prints the current processes
         {
             printProcessList();
             continue;
         }
-        if (strncmp(input, "mk_hop", 6) == 0 || strncmp(input, "hop_seek", 8) == 0)
+        if (strncmp(input, "mk_hop", 6) == 0 || strncmp(input, "hop_seek", 8) == 0) // aliases
         {
             char *func_command = (char *)malloc(sizeof(char) * buf_size);
             checkForFunctions(input, &func_command);
-            printf("%s\n", func_command);
-            dividingCommands(func_command, home_dir, actual_filename, previous_directory);
+            dividingCommands(func_command, home_dir, logFileName, previous_directory);
             continue;
         }
-        dividingCommands(input, home_dir, actual_filename, previous_directory);
+        dividingCommands(input, home_dir, logFileName, previous_directory);
     }
 }

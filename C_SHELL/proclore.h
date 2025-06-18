@@ -9,6 +9,5 @@
 #define buf_size 4096
 
 void proclore();
-
 void procloreID(int ID);
 #endif

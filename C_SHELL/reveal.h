@@ -13,9 +13,9 @@
 
 void print_permissions(struct stat *fileStat);
 
-void reveal_permissions(char *directory, int a_flag);
+void reveal_permissions(char *directory, int aFlag);
 
-void reveal_(char *directory, int a_flag);
+void reveal_(char *directory, int aFlag);
 
 void reveal_fun(char *input, char *home_dir);
 
